@@ -27,17 +27,17 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 
-public abstract class BasicModule implements IOFMessageListener, /*IOFSwitchListener,*/ IFloodlightModule
+public abstract class BasicModule implements IOFMessageListener, IOFSwitchListener, IFloodlightModule
 {
 	protected IFloodlightProviderService floodlightProvider;
-//	protected IOFSwitchService switchService;
+	protected IOFSwitchService switchService;
 	protected static Logger logger;
 
 	@Override
 	public void init(FloodlightModuleContext context) throws FloodlightModuleException
 	{
 		floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-//		switchService = context.getServiceImpl(IOFSwitchService.class);
+		switchService = context.getServiceImpl(IOFSwitchService.class);
 	    logger = LoggerFactory.getLogger(this.getClass());
 	    
 	    pseudoConstructor();
@@ -48,38 +48,50 @@ public abstract class BasicModule implements IOFMessageListener, /*IOFSwitchList
 	{
 		floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
 		floodlightProvider.addOFMessageListener(OFType.ERROR, this);
-//		floodlightProvider.addOFMessageListener(OFType.FLOW_REMOVED, this);
 		
 		/* TODO: maybe write code for these as well... when I feel like it >:) */
 //		floodlightProvider.addOFMessageListener(OFType.BARRIER_REPLY, this);
 //		floodlightProvider.addOFMessageListener(OFType.FEATURES_REPLY, this);
 //		floodlightProvider.addOFMessageListener(OFType.STATS_REPLY, this);
-//		floodlightProvider.addOFMessageListener(OFType.GET_CONFIG_REPLY, this);
-//		floodlightProvider.addOFMessageListener(OFType.HELLO, this);
+//		floodlightProvider.addOFMessageListener(OFType.FLOW_REMOVED, this);
 		
-//		switchService.addOFSwitchListener(this);
+		switchService.addOFSwitchListener(this);
 		
 		logger.info("Module startup: {}", getName());
 	}
 	
-//	@Override
-//	public void switchActivated(DatapathId switchId)
-//	{
-//		/* nothing */
-//	}
-//
-//	@Override
-//	public void switchPortChanged(DatapathId switchId, OFPortDesc port, PortChangeType type)
-//	{
-//		/* nothing */
-//		
-//	}
-//
-//	@Override
-//	public void switchChanged(DatapathId switchId)
-//	{
-//		/* nothing */
-//	}
+	@Override
+	public void switchActivated(DatapathId switchId)
+	{
+		
+	}
+
+	@Override
+	public void switchPortChanged(DatapathId switchId, OFPortDesc port, PortChangeType type)
+	{
+		/* nothing */
+	}
+
+	@Override
+	public void switchChanged(DatapathId switchId)
+	{
+		/* nothing */
+	}
+	
+	@Override
+	public void switchAdded(DatapathId switchId)
+	{
+		IOFSwitch sw = switchService.getSwitch(switchId);
+		if (sw == null)
+			return;
+		handleSwitchUp(sw);
+	}
+
+	@Override
+	public void switchRemoved(DatapathId switchId)
+	{
+		/* nothing */
+	}
 
 	@Override
 	public IListener.Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx)
@@ -156,5 +168,7 @@ public abstract class BasicModule implements IOFMessageListener, /*IOFSwitchList
 	protected abstract void receivePacketIn(IOFSwitch sw, OFPacketIn msg, FloodlightContext cntx);
 	
 //	protected abstract void receiveFlowRemoved(IOFSwitch sw, OFFlowRemoved msg, FloodlightContext cntx);
+	
+	protected abstract void handleSwitchUp(IOFSwitch sw);
 	
 }
