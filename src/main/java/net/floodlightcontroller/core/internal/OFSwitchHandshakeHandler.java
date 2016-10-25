@@ -1234,12 +1234,13 @@ public class OFSwitchHandshakeHandler implements IOFConnectionListener {
 			if (OFSwitchManager.clearTablesOnEachTransitionToMaster) {
 				log.info("Clearing flow tables of {} on recent transition to MASTER.", sw.getId().toString());
 				clearAllTables();
+				addDefaultFlows();
 			} else if (OFSwitchManager.clearTablesOnInitialConnectAsMaster && initialRole == null) { /* don't do it if we were slave first */
 				initialRole = OFControllerRole.ROLE_MASTER;
 				log.info("Clearing flow tables of {} on initial role as MASTER.", sw.getId().toString());
 				clearAllTables();
+				addDefaultFlows();
 			}
-			addDefaultFlows();
 		}
 
 		@LogMessageDoc(level="WARN",
